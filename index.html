@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>天地图矢量瓦片离线渲染测试</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    .zoom-display {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 4px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: monospace;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+
+  <script>
+    // ================== 使用前必读 ==================
+    // 1. 先运行  node download.js          下载瓦片并生成 style.json
+    // 2. 再运行  node download-static.js  下载图标/字体并改写 style.json 为本地路径
+    // 3. 在「项目根目录」启动静态服务器托管（注意是项目根目录，不是 dist 目录）：
+    //      python3 -m http.server 8080
+    //    （若 8080 被占用可换成 8081 等其它端口，浏览器地址相应改一下即可）
+    // 4. 浏览器打开 http://localhost:8080/index.html
+    //
+    // 说明：config.js 的 style.tileBaseUrl 已留空 ''，style.json 里的瓦片/图标/字体
+    //       都是相对路径（tiles/...、sprite/...、fonts/...）；本地测试时部署根是 dist，
+    //       故下面 transformRequest 统一补上 '/dist' 前缀，无需手动改。
+
+    // 地图中心与初始级别（按你下载的范围修改）
+    const CENTER = [39.95, 116.4]; // [纬度, 经度]，北京附近
+    const BASE = location.origin; // 例如 http://localhost:8081，自动取当前端口
+    const STYLE_URL = BASE + '/dist/style.json';
+
+    // 注意：maplibre-gl-leaflet 内部会把 maplibre 的 zoom 设为 leaflet 的 zoom - 1，
+    // 因此 leaflet 的 maxZoom 需比下载的最大级别多 1（下载到 18 级则这里用 19）。
+    const map = L.map('map', {
+      minZoom: 1,
+      maxZoom: 19,
+      // 限制纬度范围，避免与 maplibre 的纬度限制冲突
+      maxBounds: [[85, -Infinity], [-85, Infinity]],
+      maxBoundsViscosity: 1,
+      attributionControl: true,
+    }).setView(CENTER, 10);
+
+    L.maplibreGL({
+      style: STYLE_URL,
+      // 关键：style.json 里的 tiles/sprite/glyphs 是相对路径（如 tiles/{z}/{x}/{y}.pbf），
+      // maplibre 在 Web Worker 中加载瓦片时无法解析相对路径，需在此统一转成绝对 URL。
+      // 本地测试时部署根是 dist，故前缀补 '/dist'。
+      transformRequest: (url) => {
+        if (url.startsWith('http')) return { url };
+        return { url: BASE + '/dist/' + url };
+      },
+      attribution: '&copy; 天地图 GS(2025)1508号',
+    }).addTo(map);
+
+    // 显示当前地图层级（zoom）
+    const ZoomDisplay = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd: function () {
+        const div = L.DomUtil.create('div', 'zoom-display');
+        div.textContent = 'Zoom: ' + map.getZoom();
+        map.on('zoomend', function () {
+          div.textContent = 'Zoom: ' + map.getZoom();
+        });
+        return div;
+      },
+    });
+    new ZoomDisplay().addTo(map);
+  </script>
+</body>
+</html>

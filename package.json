@@ -1,0 +1,16 @@
+{
+  "name": "tiandi-vector-download",
+  "version": "1.0.0",
+  "description": "天地图普通地图矢量瓦片下载（含 pk 签名与解密），支持 SQLite 断点续传",
+  "main": "download.js",
+  "scripts": {
+    "download": "node download.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.10.0"
+  }
+}
