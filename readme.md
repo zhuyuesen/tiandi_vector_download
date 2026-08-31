@@ -9,18 +9,21 @@
 ## 快速开始
 
 ```bash
-# 1. 编辑 config.js：填入 tk、下载范围 point1/point2、级别 minZoom/maxZoom
+# 1. 安装依赖
+npm install
 
-# 2. 下载瓦片（自动解密为标准 MVT）并生成 style.json
+# 2. 编辑 config.js：填入 tk、下载范围 point1/point2、级别 minZoom/maxZoom
+
+# 3. 下载瓦片（自动解密为标准 MVT）并生成 style.json
 node download.js
 
-# 3.（可选，实现完全离线）下载图标和字体
+# 4.（可选，实现完全离线）下载图标和字体，并改写 style.json 为本地路径
 node download-static.js
 
-# 4. 在「项目根目录」启动静态服务器
+# 5. 在「项目根目录」启动静态服务器
 python3 -m http.server 8080
 
-# 5. 浏览器打开
+# 6. 浏览器打开
 # http://localhost:8080/index.html
 ```
 
