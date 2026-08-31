@@ -36,8 +36,6 @@ python3 -m http.server 8080
 | `index.html`         | 渲染测试页（leaflet + maplibre-gl-leaflet）                         |
 | `参考.md`            | 参考文章分析（其中部分说法不准确，见文末）                          |
 
-无第三方依赖，仅需 Node.js。
-
 ### 输出目录（部署根）结构
 
 运行后 `dist/`（`config.outputDir`）下的结构如下，静态资源与瓦片分层存放：
@@ -256,29 +254,5 @@ L.maplibreGL({
 - 端点域名：文章写 `t0.tianditu.gov.cn/vts`，实际是 `tile0.tianditu.gov.cn/vts`（`t0` 会 404）。
 - 「pk 算法未公开」：不准确，算法就在官网前端 JS 里，可逆向还原。
 - 「PBF 字节翻转 + Tag 重映射加密」：这部分基本属实，但加密不是单一「字节翻转」，而是字节取反 + 字段编号重映射 + type/command 重映射的复合变换。
-- 「无开箱即用实现」：本项目即为一个可用的 Node.js 实现。
 
-## todo
-
-1. 自定义并发数
-2. 可能下载低层级全球数据和高层级指定区域吗，fonts和sprite和style.json 会重复下载 另外存储，不和瓦片同级
-3. fonts和sprite和style.json可能需要随前端项目部署，瓦片需要瓦片服务器部署，所以应该如何关联
-4. 用数据库记录存储进度
-
-当前下载脚本未考虑到以下2个问题
-
-1. 可能下载低层级全球数据和高层级指定区域吗，fonts和sprite和style.json 会重复下载，是否应该另外存储，不和瓦片同级
-2. fonts和sprite和style.json应该随前端项目一起部署还是应该部署到瓦片服务器上
-
-我需要指定下载目录并且需要考虑当前脚本在不同操作系统下的兼容性，比入config.js 的 outputDir，考虑不同平台的相对绝对/路径、路径分隔符问题
-
-分析downlkoad.js和download-static.js
-比如我的图片服务器地址是 'http://183.56.226.80:30280'，"http://183.56.226.80:30280/tiles/map/tiandi/vectors/" 是预定的瓦片目录，我把下载后的dist目录下的文件夹和文件传递到vectors目录下，我在前端项目如何引入？
-不用先改动项目，请先与我确定方案
-
-我的'http://183.56.226.80:30280'只是个实例，我不希望在config.js里写死路径，你有什么建议
-
-/Users/hanzi/gzfs/projects/vue2-haitu是我写的另外一个瓦片下载、瓦片前端加载项目。/Users/hanzi/gzfs/projects/vue2-haitu/scripts目录是瓦片下载项目，参考下载项目思考下载进度应该如何记录，然后与我确认
-
-分批次下载style.json会冲突吗，比如我下载了1-10级，再下载11-20级，会冲突吗？如果冲突如何处理？
-基本场景是我会下载1-12级的基本层级全球地图，然后在要部署项目的地方比如省级或市级下载13-19级地图，然后合并基本层级。考虑如何解决冲突
+## QA

@@ -16,7 +16,7 @@ module.exports = {
 
   // 瓦片级别：起始 / 结束（天地图普通地图矢量瓦片支持 1 ~ 19）
   minZoom: 1,
-  maxZoom: 9,
+  maxZoom: 10,
 
   // 部署根目录（相对当前目录或绝对路径），所有离线产物都放在这里：
   //   瓦片 tiles/、样式 style.json、图标 sprite/、字体 fonts/

@@ -12,8 +12,8 @@
       "maxzoom": 19
     }
   },
-  "sprite": "https://vector.tianditu.gov.cn/static/sprite/png",
-  "glyphs": "https://vector.tianditu.gov.cn/static/font/{fontstack}/{range}.pbf",
+  "sprite": "sprite/png",
+  "glyphs": "fonts/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "base-dynamic-tdt1",
