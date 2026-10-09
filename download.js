@@ -293,14 +293,22 @@ function downloadTile(url, filePath, retries = RETRY_LIMIT) {
   });
 }
 
+// 多 tk 轮询：每个瓦片依次使用不同密钥，避免单个密钥调用超限
+let tkCursor = 0;
+function nextTk() {
+  const tks = config.tks || [];
+  return tks[tkCursor++ % tks.length];
+}
+
 // 子域自动回退：首选子域失败时依次尝试其余子域
 async function downloadWithFallback(t, file) {
+  const tk = nextTk();
   const primary = config.subdomains[(t.x + t.y) % config.subdomains.length];
   const subs = [primary, ...config.subdomains.filter((s) => s !== primary)];
   let lastErr;
   for (const sub of subs) {
     try {
-      return await downloadTile(buildTileUrl(t.x, t.y, t.z, config.tk, sub), file);
+      return await downloadTile(buildTileUrl(t.x, t.y, t.z, tk, sub), file);
     } catch (err) {
       lastErr = err;
     }
@@ -423,7 +431,8 @@ function buildFingerprint() {
 }
 
 async function main() {
-  if (!config.tk || config.tk.includes('在这里')) {
+  if (!Array.isArray(config.tks) || config.tks.length === 0 ||
+      config.tks.some((k) => typeof k !== 'string' || !k.trim() || k.includes('在这里'))) {
     throw new Error('请先在 config.js 中填入天地图开发者密钥 tk');
   }
 
