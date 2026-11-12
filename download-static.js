@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const zlib = require('zlib');
 const config = require('./config');
 
 // ---------- 通用下载（带重试） ----------
@@ -23,8 +24,13 @@ function download(url, dest, retries = 3) {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
         res.on('end', () => {
-          fs.writeFile(dest, Buffer.concat(chunks), (err) =>
-            err ? reject(err) : resolve(chunks.reduce((s, c) => s + c.length, 0))
+          let data = Buffer.concat(chunks);
+          // glyphs 同为 .pbf，与瓦片保持同一约定：落盘为 gzip 字节（sprite 的 json/png 不压缩）
+          if (config.gzipTiles && dest.endsWith('.pbf') && data.length > 0) {
+            data = zlib.gzipSync(data, { level: zlib.constants.Z_BEST_COMPRESSION });
+          }
+          fs.writeFile(dest, data, (err) =>
+            err ? reject(err) : resolve(data.length)
           );
         });
       } else {

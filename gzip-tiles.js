@@ -1,13 +1,18 @@
 /**
- * 把已下载的 .pbf 瓦片原地转成 gzip 压缩（文件名、扩展名均不变）
+ * 把已下载的 .pbf 文件原地转成 gzip 压缩（文件名、扩展名均不变）
  *
- * 与海图瓦片统一约定：磁盘上的 .pbf 文件本身就是 gzip 字节（魔数 1f 8b），
+ * 覆盖部署根下的两类 .pbf：
+ *   - tiles/  矢量瓦片
+ *   - fonts/  glyphs 字体（SDF 字形，同样是 .pbf，同样必须与瓦片保持同一编码约定）
+ * sprite/ 下的 .json / .png 不处理（文本/图片交给服务器的常规 gzip 模块）。
+ *
+ * 与海图文件统一约定：磁盘上的 .pbf 文件本身就是 gzip 字节（魔数 1f 8b），
  * 由瓦片服务返回 Content-Encoding: gzip，浏览器收到后自动解压。
  *
  * 说明：
- *   - 可重复执行，已是 gzip 的瓦片会跳过；
+ *   - 可重复执行，已是 gzip 的文件会跳过；
  *   - 先写 .tmp 再原子重命名，中断不会产生残缺文件；
- *   - 只处理 config.outputDir 下的 tiles/，不影响 sprite / fonts / style.json。
+ *   - 只处理 config.outputDir 下的 tiles/ 与 fonts/，不影响 sprite / style.json。
  *
  * 用法：node gzip-tiles.js
  */
@@ -33,19 +38,31 @@ async function* walkPbf(dir) {
   }
 }
 
+// 依次遍历存在的瓦片目录与字体目录
+async function* walkAll(dirs) {
+  for (const d of dirs) {
+    if (fs.existsSync(d)) yield* walkPbf(d);
+  }
+}
+
 async function main() {
-  const tilesDir = path.join(path.resolve(config.outputDir), 'tiles');
-  if (!fs.existsSync(tilesDir)) throw new Error(`瓦片目录不存在：${tilesDir}`);
+  const outDir = path.resolve(config.outputDir);
+  const tilesDir = path.join(outDir, 'tiles');
+  const fontsDir = path.join(outDir, 'fonts');
+  if (!fs.existsSync(tilesDir) && !fs.existsSync(fontsDir)) {
+    throw new Error(`瓦片/字体目录均不存在：${outDir}/tiles、${outDir}/fonts`);
+  }
 
   console.log('======================================');
-  console.log(' 已下载瓦片转 gzip（原地，保留 .pbf 文件名）');
+  console.log(' 已下载 .pbf 转 gzip（原地，保留文件名）');
   console.log('======================================');
-  console.log(`瓦片目录: ${tilesDir}`);
+  console.log(`部署根: ${outDir}`);
+  console.log(`范围: ${[tilesDir, fontsDir].filter(fs.existsSync).join('、')}`);
   console.log(`并发: ${CONCURRENCY}  压缩级别: 9`);
 
   const stats = { total: 0, converted: 0, skipped: 0, failed: 0, before: 0, after: 0 };
   const startTime = Date.now();
-  const iter = walkPbf(tilesDir);
+  const iter = walkAll([tilesDir, fontsDir]);
 
   async function worker() {
     for (;;) {
