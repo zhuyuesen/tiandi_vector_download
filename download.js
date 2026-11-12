@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const zlib = require('zlib');
 const config = require('./config');
 const ProgressDB = require('./db-helper');
 
@@ -258,6 +259,12 @@ function downloadTile(url, filePath, retries = RETRY_LIMIT) {
           let data = Buffer.concat(chunks);
           if (encrypt === '1') data = decryptTile(data); // 还原为标准 MVT
           if (data.length === 0) return resolve({ status: 'empty' });
+
+          // 与海图瓦片统一：压缩必须在解密之后，落盘为 gzip 字节（文件名仍为 .pbf），
+          // 由瓦片服务返回 Content-Encoding: gzip 供浏览器自动解压。
+          if (config.gzipTiles) {
+            data = zlib.gzipSync(data, { level: zlib.constants.Z_BEST_COMPRESSION });
+          }
 
           // 先写 .tmp 再原子重命名，避免中断产生残缺文件
           fs.mkdirSync(path.dirname(filePath), { recursive: true });

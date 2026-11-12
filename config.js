@@ -31,6 +31,13 @@ module.exports = {
   // 并发下载数
   concurrency: 8,
 
+  // 瓦片是否 gzip 压缩后落盘（与海图瓦片保持同一约定）
+  // true ：磁盘上的 .pbf 文件本身是 gzip 字节（魔数 1f 8b），文件名仍为 .pbf，
+  //        瓦片服务需对 .pbf 返回 Content-Encoding: gzip（由浏览器自动解压）
+  // false：落盘为未压缩的标准 MVT
+  // 注意：同一瓦片目录内必须统一，混用会导致浏览器按错误的编码解析而报错
+  gzipTiles: true,
+
   // 子域轮询（tile0 ~ tile7 均可，建议保留多个；某子域不可用时 download.js 会自动回退）
   subdomains: ['tile0', 'tile1', 'tile2'],
 
